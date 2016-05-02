@@ -3,14 +3,14 @@
 ----  All rights reserved.
 ----
 ----  This source code is licensed under the Apache 2 license found in the
-----  LICENSE file in the root directory of this source tree. 
+----  LICENSE file in the root directory of this source tree.
 ----
 
 gpu = false
 if gpu then
     require 'cunn'
-    print("Running on GPU") 
-    
+    print("Running on GPU")
+
 else
     require 'nn'
     print("Running on CPU")
@@ -27,7 +27,7 @@ local params = {
                 layers=2,
                 decay=2,
                 rnn_size=200, -- hidden unit size
-                dropout=0, 
+                dropout=0,
                 init_weight=0.1, -- random weight initialization limits
                 lr=1, --learning rate
                 vocab_size=10000, -- limit on the vocabulary size
@@ -45,6 +45,36 @@ function transfer_data(x)
 end
 
 model = {}
+
+function grucell(input,prevh)
+  local i2h = nn.Linear(nhid,3*nhid)(input)
+  local h2h = nn.Linear(nhid, 3 * nhid)(prevh)
+  local gates = nn.CAddTable()({
+    nn.Narrow(2,1,2*nhid)(i2h),
+    nn.Narrow(2, 1, 2*nhid)(h2h)
+  })
+  gates = nn.SplitTable(2)(nn.Reshape(2,nhid)(gates))
+  local resetgate = nn.Sigmoid()(nn.SelectTable(1)(gates))
+  local updategate = nn.Sigmoid()(nn.SelectTable(2)(gates))
+  local output = nn.Tanh()(nn.CAddTable()({
+    nn.Narrow(2, 2 * nhid+1,nhid)(i2h),
+    nn.CMulTable()({
+      resetgate,
+      nn.Narrow(2, 2 * nhid+1,nhid)(h2h)
+    })
+  }))
+  local nexth = nn.CAddTable()({
+    prevh,
+    nn.CMulTable()({
+      updategate,
+      nn.CSubTable()({
+        output,
+        prevh
+      })
+    })
+  })
+  return nexth
+end
 
 local function lstm(x, prev_c, prev_h)
     -- Calculate all four gates in one go
@@ -79,13 +109,11 @@ function create_network()
     local i                  = {[0] = nn.LookupTable(params.vocab_size,
                                                     params.rnn_size)(x)}
     local next_s             = {}
-    local split              = {prev_s:split(2 * params.layers)}
+    local split              = {prev_s:split(params.layers)}
     for layer_idx = 1, params.layers do
-        local prev_c         = split[2 * layer_idx - 1]
-        local prev_h         = split[2 * layer_idx]
+        local prev_h         = split[layer_idx]
         local dropped        = nn.Dropout(params.dropout)(i[layer_idx - 1])
-        local next_c, next_h = lstm(dropped, prev_c, prev_h)
-        table.insert(next_s, next_c)
+        local next_h = grucell(dropped, prev_h)
         table.insert(next_s, next_h)
         i[layer_idx] = next_h
     end
@@ -139,14 +167,14 @@ function reset_ds()
 end
 
 function fp(state)
-    -- g_replace_table(from, to).  
+    -- g_replace_table(from, to).
     g_replace_table(model.s[0], model.start_s)
-    
+
     -- reset state when we are done with one full epoch
     if state.pos + params.seq_length > state.data:size(1) then
         reset_state(state)
     end
-    
+
     -- forward prop
     for i = 1, params.seq_length do
         local x = state.data[state.pos]
@@ -155,10 +183,10 @@ function fp(state)
         model.err[i], model.s[i] = unpack(model.rnns[i]:forward({x, y, s}))
         state.pos = state.pos + 1
     end
-    
+
     -- next-forward-prop start state is current-forward-prop's last state
     g_replace_table(model.start_s, model.s[params.seq_length])
-    
+
     -- cross entropy error
     return model.err:mean()
 end
@@ -181,17 +209,17 @@ function bp(state)
         -- remember (to, from)
         g_replace_table(model.ds, tmp)
     end
-    
+
     -- undo changes due to changing position in bp
     state.pos = state.pos + params.seq_length
-    
+
     -- gradient clipping
     model.norm_dw = paramdx:norm()
     if model.norm_dw > params.max_grad_norm then
         local shrink_factor = params.max_grad_norm / model.norm_dw
         paramdx:mul(shrink_factor)
     end
-    
+
     -- gradient descent step
     paramx:add(paramdx:mul(-params.lr))
 end
@@ -199,10 +227,10 @@ end
 function run_valid()
     -- again start with a clean slate
     reset_state(state_valid)
-    
+
     -- no dropout in testing/validating
     g_disable_dropout(model.rnns)
-    
+
     -- collect perplexity over the whole validation set
     local len = (state_valid.data:size(1) - 1) / (params.seq_length)
     local perp = 0
@@ -218,7 +246,7 @@ function run_test()
     g_disable_dropout(model.rnns)
     local perp = 0
     local len = state_test.data:size(1)
-    
+
     -- no batching here
     g_replace_table(model.s[0], model.start_s)
     for i = 1, (len - 1) do
@@ -267,14 +295,14 @@ while epoch < params.max_max_epoch do
     end
     perps[step % epoch_size + 1] = perp
     step = step + 1
-    
+
     -- gradient over the step
     bp(state_train)
-    
+
     -- words_per_step covered in one step
     total_cases = total_cases + params.seq_length * params.batch_size
     epoch = step / epoch_size
-    
+
     -- display details at some interval
     if step % torch.round(epoch_size / 10) == 10 then
         wps = torch.floor(total_cases / torch.toc(start_time))
@@ -286,7 +314,7 @@ while epoch < params.max_max_epoch do
              ', lr = ' ..  g_f3(params.lr) ..
              ', since beginning = ' .. since_beginning .. ' mins.')
     end
-    
+
     -- run when epoch done
     if step % epoch_size == 0 then
         run_valid()
