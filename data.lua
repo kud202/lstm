@@ -3,7 +3,7 @@
 ----  All rights reserved.
 ----
 ----  This source code is licensed under the Apache 2 license found in the
-----  LICENSE file in the root directory of this source tree. 
+----  LICENSE file in the root directory of this source tree.
 ----
 
 local stringx = require('pl.stringx')
@@ -15,8 +15,9 @@ local trainfn = ptb_path .. "ptb.train.txt"
 local testfn  = ptb_path .. "ptb.test.txt"
 local validfn = ptb_path .. "ptb.valid.txt"
 
-local vocab_idx = 0
+local vocab_idx = 1
 local vocab_map = {}
+local vocab_inv_map = {}
 
 -- Stacks replicated, shifted versions of x_inp
 -- into a single matrix of size x_inp:size(1) x batch_size.
@@ -37,10 +38,12 @@ local function load_data(fname)
     data = stringx.split(data)
     --print(string.format("Loading %s, size of data = %d", fname, #data))
     local x = torch.zeros(#data)
+    vocab_map['<unk>'] = 0
     for i = 1, #data do
         if vocab_map[data[i]] == nil then
             vocab_idx = vocab_idx + 1
             vocab_map[data[i]] = vocab_idx
+            vocab_inv_map[vocab_idx] = data[i]
         end
         x[i] = vocab_map[data[i]]
     end
@@ -72,4 +75,5 @@ end
 return {traindataset=traindataset,
         testdataset=testdataset,
         validdataset=validdataset,
-        vocab_map=vocab_map}
+        vocab_map=vocab_map,
+        vocab_inv_map=vocab_inv_map}
