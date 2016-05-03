@@ -320,7 +320,6 @@ function run_query()
           print("Failed, try again")
         end
       else
-        print("Thanks, I will print foo " .. line[1] .. " more times")
         for i = 2,#line do
           state_query.data[i-1] = ptb.vocab_map[line[i]]
           io.write(line[i])
@@ -332,7 +331,7 @@ function run_query()
         x = line[#line-1]
         y = line[#line]
         for i = 1, line[1] do
-          perp_tmp, model.s[1],pred = unpack(model.rnns[1]:forward({prev, next, model.s[0]}))
+          perp_tmp, model.s[1],pred = unpack(model.rnns[1]:forward({x, y, model.s[0]}))
           g_replace_table(model.s[0], model.s[1])
           x = y
           y = int(pred)
@@ -340,20 +339,6 @@ function run_query()
           io.write(' ')
         end
         io.write('\n')
-        reset_state(state_query)
-        g_disable_dropout(model.rnns)
-
-        -- no batching here
-        g_replace_table(model.s[0], model.start_s)
-        
-        x = line[#line-1]
-        y = line[#line]
-        for i = 1,line[1] do
-            perp_tmp, model.s[1],pred = unpack(model.rnns[1]:forward({x, y, model.s[0]}))
-            g_replace_table(model.s[0], model.s[1])
-            x = y
-            print(pred)
-        end
       end
     end
 end
