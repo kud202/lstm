@@ -325,6 +325,7 @@ function run_query()
           io.write(line[i])
           io.write(' ')
         end
+        state_query = torch.Tensor(state_query)
         reset_state(state_query)
         g_disable_dropout(model.rnns)
         g_replace_table(model.s[0], model.start_s)
