@@ -109,7 +109,7 @@ function create_network()
     local i                  = {[0] = nn.LookupTable(params.vocab_size,
                                                     params.rnn_size)(x)}
     local next_s             = {}
-    local split              = {prev_s:split(params.layers)}
+    local split              = {prev_s:split(2*params.layers)}
     for layer_idx = 1, params.layers do
         local prev_h         = split[layer_idx]
         local dropped        = nn.Dropout(params.dropout)(i[layer_idx - 1])
