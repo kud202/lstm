@@ -335,6 +335,7 @@ function run_query()
         for i = 1, line[1] do
           perp_tmp, model.s[1],pred = unpack(model.rnns[1]:forward({x, y, model.s[0]}))
           g_replace_table(model.s[0], model.s[1])
+          print(pred)
           x = y
           y = int(pred)
           io.write(ptb.vocab_inv_map(y))
