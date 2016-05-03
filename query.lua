@@ -340,24 +340,22 @@ function run_query()
           io.write(' ')
         end
         io.write('\n')
+        reset_state(state_query)
+        g_disable_dropout(model.rnns)
+
+        -- no batching here
+        g_replace_table(model.s[0], model.start_s)
+        
+        x = line[#line-1]
+        y = line[#line]
+        for i = 1,line[1] do
+            perp_tmp, model.s[1],pred = unpack(model.rnns[1]:forward({x, y, model.s[0]}))
+            g_replace_table(model.s[0], model.s[1])
+            x = y
+            print(pred)
+        end
       end
     end
-
-    reset_state(state_test)
-    g_disable_dropout(model.rnns)
-    local len = state_test.data:size(1)
-
-    -- no batching here
-    g_replace_table(model.s[0], model.start_s)
-    for i = 1, (len - 1) do
-        local x = state_test.data[i]
-        local y = state_test.data[i + 1]
-        perp_tmp, model.s[1] = unpack(model.rnns[1]:forward({x, y, model.s[0]}))
-        perp = perp + perp_tmp[1]
-        g_replace_table(model.s[0], model.s[1])
-    end
-    print("Test set perplexity : " .. g_f3(torch.exp(perp / (len - 1))))
-    g_enable_dropout(model.rnns)
 end
 
 if gpu then
