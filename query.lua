@@ -331,8 +331,10 @@ function run_query()
         reset_state(state_query)
         g_disable_dropout(model.rnns)
         g_replace_table(model.s[0], model.start_s)
-        x = ptb.vocab_map[line[#line]]
-        y = ptb.vocab_map[line[#line-1]]
+        x = state_query.data[#line-2].repeatTensor(10)
+        y = state_query.data[#line-1].repeatTensor(10)
+        print(x)
+        print(y)
         for i = 1, line[1] do
           perp_tmp, model.s[1],pred = unpack(model.rnns[1]:forward({x, y, model.s[0]}))
           g_replace_table(model.s[0], model.s[1])
