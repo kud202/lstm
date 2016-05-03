@@ -328,13 +328,12 @@ function run_query()
         reset_state(state_query)
         g_disable_dropout(model.rnns)
         g_replace_table(model.s[0], model.start_s)
-        x = state_query.data[#line-1]
-        y = state_query.data[#line-2]
-        print(x)
-        print(y)
+        x = line[#line]
+        y = line[#line-1]
         for i = 1, line[1] do
           perp_tmp, model.s[1],pred = unpack(model.rnns[1]:forward({x, y, model.s[0]}))
           g_replace_table(model.s[0], model.s[1])
+          print('----')
           print(pred)
           x = y
           y = int(pred)
