@@ -328,8 +328,8 @@ function run_query()
         reset_state(state_query)
         g_disable_dropout(model.rnns)
         g_replace_table(model.s[0], model.start_s)
-        x = line[#line-1]
-        y = line[#line]
+        x = state_query.data[#line-1]
+        y = state_query.data[#line-2]
         print(x)
         print(y)
         for i = 1, line[1] do
