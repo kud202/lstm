@@ -322,7 +322,7 @@ function run_query()
       else
         print("Thanks, I will print foo " .. line[1] .. " more times")
         for i = 2,#line do
-          state_query.data[i-1] = vocab_map[line[i]]
+          state_query.data[i-1] = ptb.vocab_map[line[i]]
           io.write(line[i])
           io.write(' ')
         end
@@ -336,7 +336,7 @@ function run_query()
           g_replace_table(model.s[0], model.s[1])
           x = y
           y = int(pred)
-          io.write(vocab_inv_map(y))
+          io.write(ptb.vocab_inv_map(y))
           io.write(' ')
         end
         io.write('\n')
