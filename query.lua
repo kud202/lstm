@@ -367,7 +367,7 @@ for _, state in pairs(states) do
     reset_state(state)
 end
 setup()
-run_test()
+run_query()
 --[[
 step = 0
 epoch = 0
