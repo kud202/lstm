@@ -330,6 +330,8 @@ function run_query()
         g_replace_table(model.s[0], model.start_s)
         x = line[#line-1]
         y = line[#line]
+        print(x)
+        print(y)
         for i = 1, line[1] do
           perp_tmp, model.s[1],pred = unpack(model.rnns[1]:forward({x, y, model.s[0]}))
           g_replace_table(model.s[0], model.s[1])
