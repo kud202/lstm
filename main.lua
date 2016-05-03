@@ -47,20 +47,20 @@ end
 model = {}
 
 function grucell(input,prevh)
-  local i2h = nn.Linear(nhid,3*nhid)(input)
-  local h2h = nn.Linear(nhid, 3 * nhid)(prevh)
+  local i2h = nn.Linear(params.rnn_size,3*params.rnn_size)(input)
+  local h2h = nn.Linear(params.rnn_size, 3 * params.rnn_size)(prevh)
   local gates = nn.CAddTable()({
-    nn.Narrow(2,1,2*nhid)(i2h),
-    nn.Narrow(2, 1, 2*nhid)(h2h)
+    nn.Narrow(2,1,2*params.rnn_size)(i2h),
+    nn.Narrow(2, 1, 2*params.rnn_size)(h2h)
   })
-  gates = nn.SplitTable(2)(nn.Reshape(2,nhid)(gates))
+  gates = nn.SplitTable(2)(nn.Reshape(2,params.rnn_size)(gates))
   local resetgate = nn.Sigmoid()(nn.SelectTable(1)(gates))
   local updategate = nn.Sigmoid()(nn.SelectTable(2)(gates))
   local output = nn.Tanh()(nn.CAddTable()({
-    nn.Narrow(2, 2 * nhid+1,nhid)(i2h),
+    nn.Narrow(2, 2 * params.rnn_size+1,params.rnn_size)(i2h),
     nn.CMulTable()({
       resetgate,
-      nn.Narrow(2, 2 * nhid+1,nhid)(h2h)
+      nn.Narrow(2, 2 * params.rnn_size+1,params.rnn_size)(h2h)
     })
   }))
   local nexth = nn.CAddTable()({
