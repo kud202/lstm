@@ -334,7 +334,7 @@ function run_query()
         print(state_query.data[#line-1])
         x = torch.Tensor({state_query.data[#line-1]})
         print(x)
-        x = x:resize(x:size(1), 1):expand(x:size(1), params.batch_size)
+        x = x:resize(x:size(1), 1):expand(params.batch_size,x:size(1))
         print(x)
         for i = 1, line[1] do
           perp_tmp, model.s[1],pred = unpack(model.rnns[1]:forward({x, x, model.s[0]}))
