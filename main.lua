@@ -285,6 +285,7 @@ function run_test()
         perp_tmp, model.s[1] = unpack(model.rnns[1]:forward({x, y, model.s[0]}))
         perp = perp + perp_tmp[1]
         g_replace_table(model.s[0], model.s[1])
+        print("Test set perplexity : " .. g_f3(torch.exp(perp / (i))))
     end
     print("Test set perplexity : " .. g_f3(torch.exp(perp / (len - 1))))
     g_enable_dropout(model.rnns)
