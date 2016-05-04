@@ -38,7 +38,7 @@ local function load_data(fname)
     data = stringx.split(data)
     --print(string.format("Loading %s, size of data = %d", fname, #data))
     local x = torch.zeros(#data)
-    vocab_map['<unk>'] = 0
+    vocab_map['<unk>'] = 1
     for i = 1, #data do
         if vocab_map[data[i]] == nil then
             vocab_idx = vocab_idx + 1
