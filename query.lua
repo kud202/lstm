@@ -283,9 +283,9 @@ function run_test()
     g_replace_table(model.s[0], model.start_s)
     for i = 1, (len - 1) do
         local x = state_test.data[i]
-        print(x)
+        --print(x)
         local y = state_test.data[i + 1]
-        print(y)
+        --print(y)
         perp_tmp, model.s[1] = unpack(model.rnns[1]:forward({x, y, model.s[0]}))
         perp = perp + perp_tmp[1]
         g_replace_table(model.s[0], model.s[1])
@@ -367,6 +367,7 @@ for _, state in pairs(states) do
     reset_state(state)
 end
 setup()
+run_test()
 run_query()
 --[[
 step = 0
