@@ -317,7 +317,7 @@ words_per_step = params.seq_length * params.batch_size
 epoch_size = torch.floor(state_train.data:size(1) / params.seq_length)
 
 --print(state_train.data:size())
-
+--[[
 while epoch < params.max_max_epoch do
 
     -- take one step forward
@@ -358,6 +358,6 @@ while epoch < params.max_max_epoch do
             params.lr = params.lr / params.decay
         end
     end
-end
+end--]]
 run_test()
 print("Training is over.")
